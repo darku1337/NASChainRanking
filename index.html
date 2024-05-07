@@ -1,0 +1,117 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Miner Solve Time Rankings</title>
+<style>
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    border: 1px solid black;
+    padding: 8px;
+    text-align: left;
+  }
+  th {
+    background-color: #f2f2f2;
+  }
+  textarea {
+    width: 95%;
+    height: 150px;
+    margin: 10px;
+  }
+  button {
+    margin: 10px;
+  }
+</style>
+</head>
+<body>
+<h1>Miner Solve Time Rankings</h1>
+<textarea id="dataInput" placeholder="Paste data here..."></textarea>
+<button onclick="processData()">Process Data</button>
+<table>
+  <thead>
+    <tr>
+      <th>Miner UID</th>
+      <th>Average Solve Time per Epoch (seconds)</th>
+    </tr>
+  </thead>
+  <tbody id="minerData">
+  </tbody>
+</table>
+
+<script>
+function processData() {
+  const input = document.getElementById('dataInput').value.trim();
+  const lines = input.split('\n');
+  const data = lines.map(line => {
+    const parts = line.split('\t');
+    const jobStart = new Date(parts[3]);
+    const jobFinish = new Date(parts[4]);
+    if (!isNaN(jobStart.getTime()) && !isNaN(jobFinish.getTime())) {
+      return {
+        Assigned_User: parseInt(parts[0]),
+        Job_Start_Time: parts[3],
+        Job_Finish_Time: parts[4],
+        Valid: true
+      };
+    } else {
+      return {
+        Assigned_User: parseInt(parts[0]),
+        Valid: false
+      };
+    }
+  }).filter(job => job.Valid);
+
+  displayData(calculateSolveTimes(data));
+}
+
+function calculateSolveTimes(data) {
+  const solveTimes = data.map(job => ({
+    uid: job.Assigned_User,
+    duration: ((new Date(job.Job_Finish_Time) - new Date(job.Job_Start_Time)) / 1000) / 45
+  }));
+
+  const totalDurations = {};
+  const counts = {};
+
+  solveTimes.forEach(job => {
+    if (totalDurations[job.uid]) {
+      totalDurations[job.uid] += job.duration;
+      counts[job.uid]++;
+    } else {
+      totalDurations[job.uid] = job.duration;
+      counts[job.uid] = 1;
+    }
+  });
+
+  const averages = Object.keys(totalDurations).map(uid => ({
+    uid: uid,
+    average: totalDurations[uid] / counts[uid]
+  }));
+
+  averages.sort((a, b) => a.average - b.average); // Sort by average solve time per epoch
+  return averages;
+}
+
+function displayData(data) {
+  const tbody = document.getElementById("minerData");
+  tbody.innerHTML = ''; // Clear existing data
+  data.forEach(item => {
+    const row = document.createElement("tr");
+    const uidCell = document.createElement("td");
+    uidCell.textContent = item.uid;
+    const timeCell = document.createElement("td");
+    timeCell.textContent = item.average.toFixed(4); // More precision
+    row.appendChild(uidCell);
+    row.appendChild(timeCell);
+    tbody.appendChild(row);
+  });
+}
+</script>
+</body>
+</html>
