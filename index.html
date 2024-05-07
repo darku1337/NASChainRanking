@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,9 +45,9 @@
 <script>
 function processData() {
   const input = document.getElementById('dataInput').value.trim();
-  const lines = input.split('\n');
+  const lines = input.split('\\n');
   const data = lines.map(line => {
-    const parts = line.split('\t');
+    const parts = line.split('\\t');
     const jobStart = new Date(parts[3]);
     const jobFinish = new Date(parts[4]);
     if (!isNaN(jobStart.getTime()) && !isNaN(jobFinish.getTime())) {
